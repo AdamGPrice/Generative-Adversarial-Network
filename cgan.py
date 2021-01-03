@@ -208,8 +208,9 @@ def train(generator, discriminator, gan, epochs, batch_size):
 
 		print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
 
-		save_generator_images(generator, epoch)
-		if (epoch + 1) % 1 == 0:
+		if (epoch + 1) % 5 == 0:
+			save_generator_images(generator, epoch)
+		if (epoch + 1) % 5 == 0:
 			evaluate_performance(generator, discriminator, epoch)
 
 ### LOAD AND SAVE FUNCTIONS
@@ -221,8 +222,8 @@ def model_setup():
 		FILEPATH = '{} {:02d}-{:02d}'.format(now.date(), now.hour, now.minute)
 		if not os.path.exists(FILEPATH):
 			os.makedirs(FILEPATH)
-			os.makedirs(FILEPATH + '/' + 'images')
-			os.makedirs(FILEPATH + '/' + 'models')
+			os.makedirs(FILEPATH + '/images')
+			os.makedirs(FILEPATH + '/models')
 
 		# generate the models
 		generator = build_generator_model(CLASS_COUNT)
@@ -276,8 +277,8 @@ def save_generator_images(generator, epoch, n=10):
 		plt.imshow(images[i])
 
 	# save plot to file
-	filename = 'images/epoch_%04d.png' % (epoch+1)
-	plt.savefig(FILEPATH + '/' + filename)
+	filename = '/images/epoch_%04d.png' % (epoch+1)
+	plt.savefig(FILEPATH + filename)
 	plt.close()
 
 
