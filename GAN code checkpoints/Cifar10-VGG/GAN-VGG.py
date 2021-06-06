@@ -2,7 +2,7 @@
 import tensorflow as tf
 from tensorflow.keras.datasets import cifar10
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Dense, Conv2DTranspose, Flatten, LeakyReLU
+from tensorflow.keras.layers import Dense, Conv2DTranspose, Flatten, LeakyReLU, MaxPooling2D
 from tensorflow.keras.layers import Reshape, Conv2D, Dropout, BatchNormalization
 from tensorflow.keras.layers import Embedding, Input, Concatenate
 from tensorflow.keras.models import Model, load_model
@@ -92,18 +92,32 @@ def build_discriminator_model(n_classes):
 	
 	## merge label and image layers
 	disc = Concatenate()([in_image, label_layers])
-	# downsample
-	disc = Conv2D(64, (3,3), strides=(2,2), kernel_initializer=init, padding='same')(disc)
+	# downsample to 16 x 16
+	disc = Conv2D(64, (3,3), kernel_initializer=init, padding='same')(disc)
 	disc = LeakyReLU(alpha=0.2)(disc)
-	# downsample
-	disc = Conv2D(128, (3,3), strides=(2,2), kernel_initializer=init, padding='same')(disc)
+	disc = Conv2D(64, (3,3), kernel_initializer=init, padding='same')(disc)
 	disc = LeakyReLU(alpha=0.2)(disc)
-	# downsample
-	disc = Conv2D(256, (3,3), strides=(2,2), kernel_initializer=init, padding='same')(disc)
+	disc = MaxPooling2D(strides=(2, 2))(disc)
+	# downsample to 8 x 8
+	disc = Conv2D(128, (3,3), kernel_initializer=init, padding='same')(disc)
 	disc = LeakyReLU(alpha=0.2)(disc)
-	# downsample
-	disc = Conv2D(512, (3,3), strides=(2,2), kernel_initializer=init, padding='same')(disc)
+	disc = Conv2D(128, (3,3), kernel_initializer=init, padding='same')(disc)
 	disc = LeakyReLU(alpha=0.2)(disc)
+	disc = MaxPooling2D(strides=(2, 2))(disc)
+	# downsample to 4 x 4
+	disc = Conv2D(256, (3,3), kernel_initializer=init, padding='same')(disc)
+	disc = LeakyReLU(alpha=0.2)(disc)
+	disc = Conv2D(256, (3,3), kernel_initializer=init, padding='same')(disc)
+	disc = LeakyReLU(alpha=0.2)(disc)
+	disc = MaxPooling2D(strides=(2, 2))(disc)
+	# downsample to 2 x 2
+	disc = Conv2D(512, (3,3), kernel_initializer=init, padding='same')(disc)
+	disc = LeakyReLU(alpha=0.2)(disc)
+	disc = Conv2D(512, (3,3), kernel_initializer=init, padding='same')(disc)
+	disc = LeakyReLU(alpha=0.2)(disc)
+	disc = MaxPooling2D(strides=(2, 2))(disc)
+
+
 
 	# output
 	disc = Flatten()(disc)
@@ -208,9 +222,9 @@ def train(generator, discriminator, gan, epochs, batch_size):
 
 		print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
 
-		if (epoch + 1) % 5 == 0:
+		if (epoch + 1) % 1 == 0:
 			save_generator_images(generator, epoch)
-		if (epoch + 1) % 5 == 0:
+		if (epoch + 1) % 4 == 0:
 			evaluate_performance(generator, discriminator, epoch)
 
 ### LOAD AND SAVE FUNCTIONS
@@ -243,8 +257,8 @@ def model_setup():
 		discriminator = load_model(model_dir + '/discriminator.h5')
 		discriminator.summary()
 
-		opt = Adam(lr=0.0002, beta_1=0.5)
-		discriminator.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+		#opt = Adam(lr=0.0002, beta_1=0.5)
+		#discriminator.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 		gan = build_gan_model(generator, discriminator)
 		gan.summary()
